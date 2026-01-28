@@ -80,6 +80,19 @@ export default function TypeformFlow() {
           <EmployedStep
             onSelect={(employed) => {
               setFormData({ ...formData, employed });
+              
+              if (!employed) {
+                // Lead qualificado: Gestante e não empregada (conforme lógica do fluxo)
+                if (typeof window.fbq === 'function') {
+                  window.fbq('trackCustom', 'Lead Qualificado');
+                }
+              } else {
+                // Lead desqualificado: Empregada
+                if (typeof window.fbq === 'function') {
+                  window.fbq('trackCustom', 'Lead Desqualificado');
+                }
+              }
+
               handleNext(employed ? "employed-disqualified" : "thank-you");
             }}
           />
@@ -119,7 +132,7 @@ function IntroStep({ onNext }: { onNext: () => void }) {
         Milhares de gestantes estão recebendo até <strong className="text-primary">R$ 6.480,00</strong> do governo. 
         Assista ao vídeo e descubra se você também tem direito!
       </p>
-      <div className="aspect-video w-full rounded-xl overflow-hidden shadow-lg">
+      {/* <div className="aspect-video w-full rounded-xl overflow-hidden shadow-lg">
         <iframe
           className="w-full h-full"
           src="https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -127,7 +140,7 @@ function IntroStep({ onNext }: { onNext: () => void }) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
-      </div>
+      </div> */}
       <Button
         onClick={onNext}
         size="lg"
