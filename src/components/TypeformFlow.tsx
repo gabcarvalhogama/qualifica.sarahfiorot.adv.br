@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -291,6 +291,18 @@ function EmployedStep({ onSelect }: { onSelect: (employed: boolean) => void }) {
 }
 
 function ThankYouStep({ name }: { name: string }) {
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      const message = encodeURIComponent("Olá, quero solicitar meu auxílio-maternidade");
+      window.location.href = `https://wa.me/5527996383725?text=${message}`;
+    }
+  }, [countdown]);
+
   return (
     <div className="text-center space-y-6 animate-slide-in">
       <div className="w-20 h-20 bg-success/20 rounded-full flex items-center justify-center mx-auto">
@@ -302,8 +314,18 @@ function ThankYouStep({ name }: { name: string }) {
         Obrigado, {name}!
       </h2>
       <p className="text-muted-foreground text-lg">
-        Seu cadastro foi realizado com sucesso! Em breve, um dos nossos advogados especializados entrará em contato pelo WhatsApp para te explicar como receber o seu auxílio maternidade.
+        Seu cadastro foi realizado com sucesso!
       </p>
+      
+      <div className="bg-primary/10 p-6 rounded-xl border border-primary/20 space-y-2">
+        <p className="font-semibold text-lg text-primary-foreground">
+          Você será redirecionada para o WhatsApp do escritório em {countdown} segundos...
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Caso não seja redirecionada, <a href={`https://wa.me/5527996383725?text=${encodeURIComponent("Olá, quero solicitar meu auxílio-maternidade")}`} className="underline font-bold text-primary-foreground hover:text-primary">clique aqui</a>.
+        </p>
+      </div>
+
       <p className="text-sm text-muted-foreground">
         Fique atenta ao seu celular! 📱
       </p>
