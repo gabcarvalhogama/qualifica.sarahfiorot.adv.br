@@ -16,7 +16,6 @@ WORKDIR /app
 # Copia os arquivos necessários da etapa anterior
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.js ./
-COPY --from=builder /app/server ./server
 COPY package*.json ./
 
 RUN npm install
