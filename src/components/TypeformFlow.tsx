@@ -98,7 +98,7 @@ export default function TypeformFlow() {
           />
         );
       case "thank-you":
-        return <ThankYouStep name={formData.name} />;
+        return <ThankYouStep formData={formData} />;
       case "not-pregnant":
         return <NotPregnantStep />;
       case "employed-disqualified":
@@ -290,18 +290,35 @@ function EmployedStep({ onSelect }: { onSelect: (employed: boolean) => void }) {
   );
 }
 
-function ThankYouStep({ name }: { name: string }) {
+function ThankYouStep({ formData }: { formData: FormData }) {
   const [countdown, setCountdown] = useState(5);
+
+  const getMessage = () => {
+    const pregnantText = formData.pregnant ? "Sim" : "Não";
+    const weeksText = formData.weeks === "menos-28" ? "Menos de 28 semanas" : "Mais de 28 semanas";
+    const employedText = formData.employed ? "Sim" : "Não";
+    
+    return `Olá, quero solicitar meu auxílio-maternidade.
+
+Meus dados:
+Nome: ${formData.name}
+Grávida: ${pregnantText}
+Semanas: ${weeksText}
+WhatsApp: ${formData.whatsapp}
+Trabalhando: ${employedText}`;
+  };
+
+  const message = encodeURIComponent(getMessage());
+  const whatsappLink = `https://wa.me/5527996383725?text=${message}`;
 
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
-      const message = encodeURIComponent("Olá, quero solicitar meu auxílio-maternidade");
-      window.location.href = `https://wa.me/5527996383725?text=${message}`;
+      window.location.href = whatsappLink;
     }
-  }, [countdown]);
+  }, [countdown, whatsappLink]);
 
   return (
     <div className="text-center space-y-6 animate-slide-in">
@@ -311,7 +328,7 @@ function ThankYouStep({ name }: { name: string }) {
         </svg>
       </div>
       <h2 className="text-2xl md:text-3xl font-bold text-card-foreground">
-        Obrigado, {name}!
+        Obrigado, {formData.name}!
       </h2>
       <p className="text-muted-foreground text-lg">
         Seu cadastro foi realizado com sucesso!
@@ -322,7 +339,7 @@ function ThankYouStep({ name }: { name: string }) {
           Você será redirecionada para o WhatsApp do escritório em {countdown} segundos...
         </p>
         <p className="text-sm text-muted-foreground">
-          Caso não seja redirecionada, <a href={`https://wa.me/5527996383725?text=${encodeURIComponent("Olá, quero solicitar meu auxílio-maternidade")}`} className="underline font-bold text-primary-foreground hover:text-primary">clique aqui</a>.
+          Caso não seja redirecionada, <a href={whatsappLink} className="underline font-bold text-primary-foreground hover:text-primary">clique aqui</a>.
         </p>
       </div>
 
