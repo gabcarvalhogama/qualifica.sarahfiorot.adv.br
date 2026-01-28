@@ -263,12 +263,14 @@ function WeeksStep({ onSelect }: { onSelect: (weeks: string) => void }) {
       <div className="space-y-2">
         <span className="text-sm font-medium text-muted-foreground">Pergunta 3 de 4</span>
         <h2 className="text-2xl md:text-3xl font-bold text-card-foreground">
-          De quantas semanas é a gestação?
+          Qual o tempo de gestação?
         </h2>
       </div>
       <div className="grid gap-4">
-        <OptionButton onClick={() => onSelect("menos-28")} label="Menos de 28 semanas" />
-        <OptionButton onClick={() => onSelect("mais-28")} label="Mais de 28 semanas" />
+        <OptionButton onClick={() => onSelect("6-meses-ou-menos")} label="6 meses ou menos" />
+        <OptionButton onClick={() => onSelect("7-meses")} label="7 meses" />
+        <OptionButton onClick={() => onSelect("8-meses")} label="8 meses" />
+        <OptionButton onClick={() => onSelect("9-meses")} label="9 meses" />
       </div>
     </div>
   );
@@ -339,7 +341,17 @@ function ThankYouStep({ formData }: { formData: FormData }) {
 
   const getMessage = () => {
     const pregnantText = formData.pregnant ? "Sim" : "Não";
-    const weeksText = formData.weeks === "menos-28" ? "Menos de 28 semanas" : "Mais de 28 semanas";
+    
+    const weeksMap: Record<string, string> = {
+      "6-meses-ou-menos": "6 meses ou menos",
+      "7-meses": "7 meses",
+      "8-meses": "8 meses",
+      "9-meses": "9 meses",
+      "menos-28": "Menos de 28 semanas",
+      "mais-28": "Mais de 28 semanas"
+    };
+    const weeksText = weeksMap[formData.weeks] || formData.weeks;
+
     const employedText = formData.employed ? "Sim" : "Não";
     
     return `Olá, quero solicitar meu auxílio-maternidade.
@@ -347,7 +359,7 @@ function ThankYouStep({ formData }: { formData: FormData }) {
 Meus dados:
 Nome: ${formData.name}
 Grávida: ${pregnantText}
-Semanas: ${weeksText}
+Tempo de gestação: ${weeksText}
 WhatsApp: ${formData.whatsapp}
 Trabalhando: ${employedText}`;
   };
@@ -427,7 +439,7 @@ function EmployedDisqualifiedStep() {
         No momento, estamos priorizando o atendimento de gestantes desempregadas para o auxílio maternidade. Mas não deixe de nos acompanhar para outras oportunidades!
       </p>
       <a
-        href="https://instagram.com"
+        href="https://instagram.com/sarahfiorotadvocacia"
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity"
