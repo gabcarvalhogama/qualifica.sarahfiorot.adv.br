@@ -79,6 +79,21 @@ export default function TypeformFlow() {
           <PregnantStep
             onSelect={(pregnant) => {
               setFormData({ ...formData, pregnant });
+
+              if (!pregnant) {
+                const nameParts = formData.name.trim().split(' ');
+                const firstName = nameParts[0];
+                const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
+
+                const userData = {
+                  fn: firstName,
+                  ln: lastName,
+                  country: 'br'
+                };
+
+                trackFacebookEvent('Lead Desqualificado', { status: 'disqualified', reason: 'not_pregnant' }, userData);
+              }
+
               handleNext(pregnant ? "weeks" : "not-pregnant");
             }}
           />
