@@ -3,6 +3,7 @@ import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Instagram } from "lucide-react";
+import { trackFacebookEvent } from "@/lib/facebook-events";
 
 type Step = 
   | "intro"
@@ -81,16 +82,30 @@ export default function TypeformFlow() {
             onSelect={(employed) => {
               setFormData({ ...formData, employed });
               
+              // Preparar dados do usuário para CAPI
+              const cleanPhone = formData.whatsapp.replace(/\D/g, '');
+              // Assumindo Brasil se não tiver DDI
+              const formattedPhone = cleanPhone.length > 0 && !cleanPhone.startsWith('55') 
+                ? `55${cleanPhone}` 
+                : cleanPhone;
+              
+              const nameParts = formData.name.trim().split(' ');
+              const firstName = nameParts[0];
+              const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
+
+              const userData = {
+                ph: formattedPhone,
+                fn: firstName,
+                ln: lastName,
+                country: 'br'
+              };
+              
               if (!employed) {
                 // Lead qualificado: Gestante e não empregada (conforme lógica do fluxo)
-                if (typeof window.fbq === 'function') {
-                  window.fbq('trackCustom', 'Lead Qualificado');
-                }
+                trackFacebookEvent('Lead Qualificado', { status: 'qualified' }, userData);
               } else {
                 // Lead desqualificado: Empregada
-                if (typeof window.fbq === 'function') {
-                  window.fbq('trackCustom', 'Lead Desqualificado');
-                }
+                trackFacebookEvent('Lead Desqualificado', { status: 'disqualified' }, userData);
               }
 
               handleNext(employed ? "employed-disqualified" : "thank-you");
