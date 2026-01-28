@@ -12,20 +12,23 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=80
-    volumes:
-      - uploads_data:/app/uploads  # Persiste arquivos de upload
     labels:
       - "traefik.enable=true"
+      # Router HTTPS
       - "traefik.http.routers.qualifica_sarahfiorot.rule=Host(`qualifica.sarahfiorot.adv.br`)"
       - "traefik.http.routers.qualifica_sarahfiorot.entrypoints=websecure"
       - "traefik.http.routers.qualifica_sarahfiorot.tls.certresolver=letsencrypt"
       - "traefik.http.services.qualifica_sarahfiorot.loadbalancer.server.port=80"
+      # Middleware para redirecionar HTTP para HTTPS
+      - "traefik.http.middlewares.qualifica_sarahfiorot-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.qualifica_sarahfiorot-redirect.redirectscheme.permanent=true"
+      # Router HTTP (aplica o redirecionamento)
+      - "traefik.http.routers.qualifica_sarahfiorot-http.rule=Host(`qualifica.sarahfiorot.adv.br`)"
+      - "traefik.http.routers.qualifica_sarahfiorot-http.entrypoints=web"
+      - "traefik.http.routers.qualifica_sarahfiorot-http.middlewares=qualifica_sarahfiorot-redirect"
     networks:
       - traefik_public
 
 networks:
   traefik_public:
     external: true
-
-volumes:
-  uploads_data:
