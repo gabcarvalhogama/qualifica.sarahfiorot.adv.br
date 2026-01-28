@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  qualifica_sarahfiorot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qualifica_sarahfiorot_container
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=80
+    volumes:
+      - uploads_data:/app/uploads  # Persiste arquivos de upload
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qualifica_sarahfiorot.rule=Host(`qualifica.sarahfiorot.adv.br`)"
+      - "traefik.http.routers.qualifica_sarahfiorot.entrypoints=websecure"
+      - "traefik.http.routers.qualifica_sarahfiorot.tls.certresolver=letsencrypt"
+      - "traefik.http.services.qualifica_sarahfiorot.loadbalancer.server.port=80"
+    networks:
+      - traefik_public
+
+networks:
+  traefik_public:
+    external: true
+
+volumes:
+  uploads_data:
