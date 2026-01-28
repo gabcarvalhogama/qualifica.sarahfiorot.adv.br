@@ -44,25 +44,29 @@ app.post('/api/fb-events', async (req, res) => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
 
     // Preparar dados do usuário com hash quando necessário
-    // Nota: O frontend já deve enviar email/telefone puros, aqui fazemos o hash.
-    // Se o frontend já mandasse hash, não precisaríamos fazer aqui.
-    // Vamos assumir que o frontend manda dados "crus" e nós hasheamos aqui por segurança e consistência.
-    
     const formattedUserData = {
       ...userData,
     };
 
-    if (userData?.em) {
-        formattedUserData.em = Array.isArray(userData.em) 
-            ? userData.em.map(hashData) 
-            : [hashData(userData.em)];
-    }
+    // Tratamento específico para em e ph (suporte a múltiplos valores - array de hashes)
+    ['em', 'ph'].forEach(field => {
+        if (formattedUserData[field]) {
+             formattedUserData[field] = Array.isArray(formattedUserData[field])
+                ? formattedUserData[field].map(hashData)
+                : [hashData(formattedUserData[field])];
+        }
+    });
 
-    if (userData?.ph) {
-        formattedUserData.ph = Array.isArray(userData.ph) 
-            ? userData.ph.map(hashData) 
-            : [hashData(userData.ph)];
-    }
+    // Tratamento para outros campos PII (fn, ln, country, etc) - espera string hashada única
+    ['fn', 'ln', 'ct', 'st', 'zp', 'country', 'ge', 'db'].forEach(field => {
+        if (formattedUserData[field]) {
+            if (Array.isArray(formattedUserData[field])) {
+                 formattedUserData[field] = hashData(formattedUserData[field][0]);
+            } else {
+                 formattedUserData[field] = hashData(formattedUserData[field]);
+            }
+        }
+    });
 
     // Adicionar IP e User Agent se não vierem do front (mas idealmente o front captura ou pegamos do request)
     if (!formattedUserData.client_ip_address) {
@@ -98,23 +102,37 @@ app.post('/api/fb-events', async (req, res) => {
     };
 
     // Enviar para Graph API
-    // Usando fetch nativo (Node 18+)
-    const response = await fetch(`https://graph.facebook.com/v19.0/${FB_PIXEL_ID}/events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(eventPayload),
-    });
+    // Usando fetch nativo (Node 18+) com timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
 
-    const data = await response.json();
+    try {
+        const response = await fetch(`https://graph.facebook.com/v19.0/${FB_PIXEL_ID}/events`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(eventPayload),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      console.error('Facebook CAPI Error:', JSON.stringify(data, null, 2));
-      return res.status(response.status).json(data);
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Facebook CAPI Error:', JSON.stringify(data, null, 2));
+          return res.status(response.status).json(data);
+        }
+
+        return res.status(200).json(data);
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            console.error('Facebook CAPI Timeout: Request took longer than 10s');
+            return res.status(504).json({ error: 'Gateway Timeout - Facebook API' });
+        }
+        throw error; // Repassa para o catch externo
     }
-
-    return res.status(200).json(data);
   } catch (error) {
     console.error('Error sending event to Facebook:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
