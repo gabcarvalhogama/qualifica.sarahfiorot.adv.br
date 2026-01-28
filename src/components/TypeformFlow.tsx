@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Instagram } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { ArrowRight, Instagram, Baby, Briefcase, X } from "lucide-react";
 import { trackFacebookEvent } from "@/lib/facebook-events";
 
 type Step = 
@@ -36,6 +37,29 @@ export default function TypeformFlow() {
 
   const handleNext = (nextStep: Step) => {
     setStep(nextStep);
+  };
+
+  const getProgress = () => {
+    switch (step) {
+      case "intro":
+        return 0;
+      case "name":
+        return 20;
+      case "pregnant":
+        return 40;
+      case "weeks":
+        return 60;
+      case "whatsapp":
+        return 80;
+      case "employed":
+        return 90;
+      case "thank-you":
+      case "not-pregnant":
+      case "employed-disqualified":
+        return 100;
+      default:
+        return 0;
+    }
   };
 
   const renderStep = () => {
@@ -130,6 +154,11 @@ export default function TypeformFlow() {
           <img src={logo} alt="Logo do Escritório" className="h-16 w-auto" />
         </div>
         <div className="bg-card rounded-2xl shadow-2xl p-8 md:p-12 animate-fade-in">
+          {step !== "intro" && (
+            <div className="mb-8">
+              <Progress value={getProgress()} className="h-2" />
+            </div>
+          )}
           {renderStep()}
         </div>
       </div>
@@ -221,8 +250,8 @@ function PregnantStep({ onSelect }: { onSelect: (pregnant: boolean) => void }) {
         </h2>
       </div>
       <div className="grid gap-4">
-        <OptionButton onClick={() => onSelect(true)} label="SIM" />
-        <OptionButton onClick={() => onSelect(false)} label="NÃO" />
+        <OptionButton onClick={() => onSelect(true)} label="SIM" icon={Baby} />
+        <OptionButton onClick={() => onSelect(false)} label="NÃO" icon={X} />
       </div>
     </div>
   );
@@ -410,12 +439,13 @@ function EmployedDisqualifiedStep() {
   );
 }
 
-function OptionButton({ onClick, label }: { onClick: () => void; label: string }) {
+function OptionButton({ onClick, label, icon: Icon }: { onClick: () => void; label: string; icon?: React.ElementType }) {
   return (
     <button
       onClick={onClick}
-      className="w-full p-4 text-left text-lg font-medium border-2 border-input rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-card-foreground"
+      className="w-full p-4 text-left text-lg font-medium border-2 border-input rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-card-foreground flex items-center gap-3"
     >
+      {Icon && <Icon className="w-6 h-6 text-primary" />}
       {label}
     </button>
   );
